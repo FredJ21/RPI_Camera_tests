@@ -1,8 +1,16 @@
 # RPI_Camera_tests
-Script d'utilisation de la caméra du Rapsberry PI
+Script d'utilisation de la caméra du Rapsberry PI 5
 
+
+<img src="img/en_construction.webp" width="100%">
 
 ## Installation
+
+```bash
+sudo apt install python3-picamera2
+```
+
+
 ```bash
 git clone https://github.com/FredJ21/RPI_Camera_tests.git
 
