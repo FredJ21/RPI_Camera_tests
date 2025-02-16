@@ -1,6 +1,8 @@
 # RPI_Camera_tests
 Script d'utilisation de la caméra du Rapsberry PI
 
+
+## Installation
 ```bash
 git clone https://github.com/FredJ21/RPI_Camera_tests.git
 
@@ -12,10 +14,17 @@ pip install -r requirements.txt
 
 ```
 
-
+## Utilisation 
 ```bash
 cd RPI_Camera_tests.git
+
+source venv/bin/activate
 
 python camera.py
 
 ```
+
+## Options
+
+TODO 
+
