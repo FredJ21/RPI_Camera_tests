@@ -11,3 +11,11 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 ```
+
+
+```bash
+cd RPI_Camera_tests.git
+
+python camera.py
+
+```
