@@ -4,6 +4,7 @@
 # -----------------------------------------------------------------------------
 import cv2
 from picamera2 import Picamera2
+from libcamera import controls
 
 from time import sleep
 
@@ -75,13 +76,16 @@ def main():
     elif not args.go :     exit()
 
 
-
-
     # ---------------------------------
     # Lancement de la camera
     #
     picam2 = Picamera2(ID_CAM)
     picam2.configure(picam2.create_preview_configuration(main={"format": 'RGB888', "size": SIZE}))
+    picam2.set_controls({"AeMeteringMode": controls.AeMeteringModeEnum.Spot})
+    #picam2.set_controls({"ExposureTime": 10000, "AnalogueGain": 1.0})
+    picam2.set_controls({"AnalogueGain": 1.0})
+
+
     picam2.start()
 
     im = picam2.capture_array()
@@ -136,9 +140,11 @@ def main():
 
         else :
         
-            print(a)
+            #print(a)
+
 
             cv2.imshow("Camera", frame)
+
 
         a += 1
   
