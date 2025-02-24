@@ -3,8 +3,6 @@
 #                                                           Fred J. 02/2025
 # -----------------------------------------------------------------------------
 import cv2
-from picamera2 import Picamera2
-from libcamera import controls
 
 from time import sleep
 
@@ -26,7 +24,7 @@ def main():
 
     # ---------------------------------
     # Analyser les arguments  et chargement des lib
-    #
+    # ---------------------------------
     args = parser.parse_args()
 
     if args.show_cam :      cmd.show_cam()
@@ -35,8 +33,20 @@ def main():
 
     cmd.show_line()
 
-    if args.cam == 1:       ID_CAM = 1
-    else :                  ID_CAM = 0
+    if args.cam == 0 or args.cam == 1:
+
+        from picamera2 import Picamera2
+        from libcamera import controls
+
+        ID_CAM = args.cam
+
+    elif args.video :
+
+        VIDEO = args.video
+
+    else :  
+        exit ()
+
 
     if   args.size == 320:      SIZE = (320, 240)
     elif args.size == 800:      SIZE = (800, 600)
@@ -73,44 +83,91 @@ def main():
         onnx_input_name = onnx_session.get_inputs()[0].name
         onnx_output_name = onnx_session.get_outputs()[0].name
 
-    elif not args.go :     exit()
 
 
     # ---------------------------------
     # Lancement de la camera
-    #
-    picam2 = Picamera2(ID_CAM)
-    picam2.configure(picam2.create_preview_configuration(main={"format": 'RGB888', "size": SIZE}))
-    picam2.set_controls({"AeMeteringMode": controls.AeMeteringModeEnum.Spot})
-    #picam2.set_controls({"ExposureTime": 10000, "AnalogueGain": 1.0})
-    picam2.set_controls({"AnalogueGain": 1.0})
+    # ---------------------------------
+    if args.cam == 0 or args.cam == 1:
+    
+        picam2 = Picamera2(ID_CAM)
+        picam2.configure(picam2.create_preview_configuration(main={"format": 'RGB888', "size": SIZE}))
+        picam2.set_controls({"AeMeteringMode": controls.AeMeteringModeEnum.Spot})
+        #picam2.set_controls({"ExposureTime": 10000, "AnalogueGain": 1.0})
+        picam2.set_controls({"AnalogueGain": 1.0})
 
 
-    picam2.start()
+        picam2.start()
 
-    im = picam2.capture_array()
-    cv2.imshow("Camera", im)
-    cvu.center("Camera", SIZE)
+        im = picam2.capture_array()
+        cv2.imshow("Camera", im)
+        cvu.center("Camera", SIZE)
 
+        loop_delay = 1
+
+    # ---------------------------------
+    # ou lecture de la video
+    # ---------------------------------
+    elif args.video :
+
+        cap = cv2.VideoCapture(VIDEO)
+
+        # Obtenir le framerate de la vidéo
+        fps = cap.get(cv2.CAP_PROP_FPS)  # Récupérer le nombre d'images par seconde
+        loop_delay = int(1000 / fps)  # Calcul du délai entre chaque image en millisecondes
+
+        if args.yolo : loop_delay = 1
+
+    # ---------------------------------
+    #           MAIN LOOP
+    # ---------------------------------
     a = 0
-
     while True:
 
 
+        # ----------[ Camera
+        if args.cam == 0 or args.cam == 1:
 
-        frame = picam2.capture_array()
-        frame = cv2.flip(frame,1)
+            frame = picam2.capture_array()
+#            frame = cv2.flip(frame,1)
+    
+        # ----------[ Video file
+        elif args.video :
 
+            ret, frame = cap.read()
 
+            if not ret:  break
+    
+            if args.size :
+                frame = cv2.resize(frame, SIZE)
+
+        # ----------[ YOLO inference
         if args.yolo:
 
-            # Inference YOLO
-            results = model(frame)
+            cv2.imshow("1", frame)
 
-            annotated_frame = results[0].plot()
+            if a > 0 :
+                results = model(frame)
+                
+                annotated_frame = results[0].plot()
+                cv2.imshow("Camera", annotated_frame)
 
-            cv2.imshow("Camera", annotated_frame)
+                keypoint = results[0].keypoints.xy
 
+                if len(keypoint[0]) == 2: 
+                    p1, p2 = keypoint[0]
+
+                    x = int(p1[0])
+                    y = int(p1[1])
+
+                    cv2.line(frame, (0,y), (SIZE[0], y), (0, 255, 0), 1)
+                    cv2.line(frame, (x,0), (x, SIZE[1]), (0, 255, 0), 1)
+
+                cv2.imshow("3", frame)
+            
+            #elif a > 10 : a = 0
+
+        # ----------[
         elif args.onnx:
 
             # Prétraitement
@@ -136,12 +193,10 @@ def main():
             cv2.imshow("Camera", resized_image)
 
 
-
-
+        # ----------[
         else :
         
             #print(a)
-
 
             cv2.imshow("Camera", frame)
 
@@ -150,10 +205,12 @@ def main():
   
         # ---------------------------------------
         # Gestion du clavier
-        key = cv2.waitKey(1) & 0xFF
+        key = cv2.waitKey(loop_delay) & 0xFF
         if key == 27:                               exit()
 
 
+    if args.video : cap.release()
+    cv2.destroyAllWindows()
 
 # -------------------------------------
 if __name__ == '__main__':

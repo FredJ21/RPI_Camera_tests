@@ -18,13 +18,17 @@ def my_argparse():
     # Options ligne de cmd
     parser = argparse.ArgumentParser(
     description='''
-    *** Test de la camera du Raspberry PI 5 ***
+    *******************************************
+    *   Test de la camera du Raspberry PI 5   *
+    *   ou lecture d'une video mp4            *
+    *******************************************
 
     Exemples d'utilisation :
 
         python camera.py -show_cam
-        python camera.py -go
-        python camera.py -yolo exemples/best.pt
+        python camera.py -video exemples/video_1.mp4
+        python camera.py -cam 0
+        python camera.py -cam 0 -yolo exemples/best.pt
         python camera.py -cam 1 -onnx exemples/best.onnx
     ''',
     formatter_class=argparse.RawTextHelpFormatter )
@@ -32,11 +36,11 @@ def my_argparse():
     parser.add_argument('-show_cam',    action='store_true', help="Liste les cameras")
     parser.add_argument('-show_hailo',  action='store_true', help="Verifie la presence le module AI HAILO")
     parser.add_argument('-show_cv',     action='store_true', help="OpenCV version")
+    parser.add_argument('-video', type=str, metavar="file_name",  help="Chemin vers un fichier video")
     parser.add_argument('-cam',  type=int,   choices=[0, 1],      help="ID de la camera utiliser (defaut: 0)")
     parser.add_argument('-size', type=int,   choices=[320, 640480, 640640, 800, 1536, 2304],
                                             help="Video mode : 320x240, 640x480(defaut), 640x640, 800x600, 1536x864, 2304x1296")
 
-    parser.add_argument('-go',   action='store_true', help="lance la lecture video simple (sans traitement)")
     parser.add_argument('-yolo', type=str, metavar="file_name",  help="Chemin vers le model YOLO")
     parser.add_argument('-onnx', type=str, metavar="file_name",  help="Chemin vers le model ONNX")
     parser.add_argument('-hef',  type=str, metavar="file_name",  help="Chemin vers le model HEF pour le module HAILO")
