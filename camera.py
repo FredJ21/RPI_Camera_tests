@@ -67,6 +67,7 @@ def main():
     elif args.onnx:
 
         print("onnx de fonctionne pas encore")
+        exit(1)
 
         print("Chargement du modele: ", args.onnx)
         
@@ -94,7 +95,7 @@ def main():
         picam2.configure(picam2.create_preview_configuration(main={"format": 'RGB888', "size": SIZE}))
         picam2.set_controls({"AeMeteringMode": controls.AeMeteringModeEnum.Spot})
         #picam2.set_controls({"ExposureTime": 10000, "AnalogueGain": 1.0})
-        picam2.set_controls({"AnalogueGain": 1.0})
+        #picam2.set_controls({"AnalogueGain": 1.0})
 
 
         picam2.start()
