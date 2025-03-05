@@ -38,8 +38,10 @@ def my_argparse():
     parser.add_argument('-show_cv',     action='store_true', help="OpenCV version")
     parser.add_argument('-video', type=str, metavar="file_name",  help="Chemin vers un fichier video")
     parser.add_argument('-cam',  type=int,   choices=[0, 1],      help="ID de la camera utiliser (defaut: 0)")
-    parser.add_argument('-size', type=int,   choices=[320, 640480, 640640, 800, 1536, 2304],
-                                            help="Video mode : 320x240, 640x480(defaut), 640x640, 800x600, 1536x864, 2304x1296")
+    parser.add_argument('-size', type=int,   choices=[320, 640480, 640640, 800, 1536, 2304, 4608],
+                                            help="Video mode : 320x240, 640x480(defaut), 640x640, 800x600, 1536x864, 2304x1296, 4608x2592")
+
+    parser.add_argument('-resize',     action='store_true', help="Resize")
 
     parser.add_argument('-yolo', type=str, metavar="file_name",  help="Chemin vers le model YOLO")
     parser.add_argument('-onnx', type=str, metavar="file_name",  help="Chemin vers le model ONNX")
@@ -88,16 +90,73 @@ class cmd_lib:
 # -------------------------------------
 class cv2_util:
 
+
+    # ------------------------------
     def __init__(self):
+
+        self.FONT    = cv2.FONT_HERSHEY_PLAIN
+        self.helpPos_X = 30
+        self.helpPos_Y = 50
+        self.helpText = []
+        self.helpText.append("----------[ Help ]----------")
+        self.helpText.append("")
+        self.helpText.append("c --> center screen")
+        self.helpText.append("f --> full screen")
+        self.helpText.append("g --> flip img")
+
         self.screen_x = get_monitors()[0].width
         self.screen_y = get_monitors()[0].height
 
+        print("SCREEN : ", self.screen_x, " x", self.screen_y)
+
+        self.fullscreen = False
+        self.win_pos = None
+
+    # ------------------------------
     def center(self, win_name, win_size):
 
         cv2.moveWindow(win_name, 
                        int((self.screen_x - win_size[0])/2), 
                        int((self.screen_y - win_size[1])/2))
 
+    # ------------------------------
+    def switch_fullscreen(self, win_name):
+
+        if self.fullscreen :
+
+            print("Fullscreen OFF")
+            self.fullscreen = False
+
+            #cv2.setWindowProperty(win_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_NORMAL)
+            cv2.destroyWindow(win_name)
+            cv2.namedWindow(win_name, cv2.WINDOW_AUTOSIZE)
+            
+            cv2.moveWindow(win_name,   self.win_pos[0], self.win_pos[1])
+            cv2.resizeWindow(win_name, self.win_pos[2], self.win_pos[3])
+        
+        else :
+
+            print("Fullscreen ON")
+            self.win_pos = cv2.getWindowImageRect(win_name)
+            self.fullscreen = True
+
+            cv2.setWindowProperty(win_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
+    # ------------------------------
+    def print_help(self, img):
+
+        y_offset = 0
+
+        for line in self.helpText :
+
+            cv2.putText(img, line, (self.helpPos_X, self.helpPos_Y+y_offset), self.FONT,1.5 ,(255,255,0),1)
+            cv2.putText(img, line, (self.helpPos_X+1, self.helpPos_Y+y_offset+1), self.FONT,1.5 ,(0,0,0),1)
+
+            y_offset += 20
+            
+        return img
+
+    # ------------------------------
     def onnx_preprocess(self, image):
 
         # Adapter la taille en fonction de votre modèle (ici 640x640 par exemple)

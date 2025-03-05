@@ -14,17 +14,24 @@ from lib import my_argparse
 cmd = cmd_lib()
 cvu = cv2_util()
 
+#RESIZE = (4608/4, 2592/4)
+RESIZE = (1152, 648)
+#RESIZE = (1920, 1080)
+
 
 # -------------------------------------
 def main():
 
     # ---------------------------------
-    parser = my_argparse()
+    FLAG_FLIP       = True
+    FLAG_PRINT_HELP = False
+
 
 
     # ---------------------------------
     # Analyser les arguments  et chargement des lib
     # ---------------------------------
+    parser = my_argparse()
     args = parser.parse_args()
 
     if args.show_cam :      cmd.show_cam()
@@ -52,6 +59,7 @@ def main():
     elif args.size == 800:      SIZE = (800, 600)
     elif args.size == 1536:     SIZE = (1536, 864)
     elif args.size == 2304:     SIZE = (2304, 1296)
+    elif args.size == 4608:     SIZE = (4608, 2592)
     elif args.size == 640640:   SIZE = (640, 640)
     else:                       SIZE = (640, 480)
 
@@ -97,13 +105,17 @@ def main():
         #picam2.set_controls({"ExposureTime": 10000, "AnalogueGain": 1.0})
         #picam2.set_controls({"AnalogueGain": 1.0})
 
-
         picam2.start()
 
+        # Premiere capture pour positionner la fenettre
         im = picam2.capture_array()
-        cv2.imshow("Camera", im)
-        cvu.center("Camera", SIZE)
 
+        im = cv2.resize(im, RESIZE )
+       
+        cv2.namedWindow("Camera", cv2.WINDOW_AUTOSIZE)
+        cv2.imshow("Camera", im)
+        cvu.center("Camera", RESIZE)
+        
         loop_delay = 1
 
     # ---------------------------------
@@ -126,12 +138,18 @@ def main():
     while True:
 
 
-        # ----------[ Camera
+        # ----------[ Get Camera  frame
         if args.cam == 0 or args.cam == 1:
 
             frame = picam2.capture_array()
-#            frame = cv2.flip(frame,1)
+            frame = cv2.resize(frame, RESIZE )
+
+            if FLAG_FLIP == True:  
+                frame = cv2.flip(frame,1)
     
+            #cv2.setWindowProperty("Camera", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+            #cv2.setWindowProperty("Camera", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_NORMAL)
+
         # ----------[ Video file
         elif args.video :
 
@@ -168,7 +186,7 @@ def main():
             
             #elif a > 10 : a = 0
 
-        # ----------[
+        # ----------[ ONNX  --> TODO
         elif args.onnx:
 
             # Prétraitement
@@ -194,20 +212,24 @@ def main():
             cv2.imshow("Camera", resized_image)
 
 
-        # ----------[
+        # ----------[ Affichage de la CAM
         else :
         
-            #print(a)
+            if FLAG_PRINT_HELP :
+                frame = cvu.print_help(frame)
 
             cv2.imshow("Camera", frame)
-
 
         a += 1
   
         # ---------------------------------------
         # Gestion du clavier
         key = cv2.waitKey(loop_delay) & 0xFF
-        if key == 27:                               exit()
+        if key == 27:               exit()
+        elif key == ord('f'):       cvu.switch_fullscreen("Camera")
+        elif key == ord('c'):       cvu.center("Camera", RESIZE)
+        elif key == ord('g'):       FLAG_FLIP ^= 1
+        elif key == ord('h'):       FLAG_PRINT_HELP ^= 1
 
 
     if args.video : cap.release()
