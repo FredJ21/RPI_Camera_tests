@@ -28,8 +28,9 @@ def my_argparse():
         python camera.py -show_cam
         python camera.py -video exemples/video_1.mp4
         python camera.py -cam 0
-        python camera.py -cam 0 -yolo exemples/best.pt
+        python camera.py -cam 0 -yolo exemples/form_detect.pt
         python camera.py -cam 1 -onnx exemples/best.onnx
+        python camera.py -video exemples/video_form.mp4 -yolo exemples/form_detect.pt
     ''',
     formatter_class=argparse.RawTextHelpFormatter )
 
@@ -41,7 +42,7 @@ def my_argparse():
     parser.add_argument('-size', type=int,   choices=[320, 640480, 640640, 800, 1536, 2304, 4608],
                                             help="Video mode : 320x240, 640x480(defaut), 640x640, 800x600, 1536x864, 2304x1296, 4608x2592")
 
-    parser.add_argument('-resize',     action='store_true', help="Resize")
+    parser.add_argument('-resize',     action='store_true', help="Resize en 1152x648 pour l'affichage ")
 
     parser.add_argument('-yolo', type=str, metavar="file_name",  help="Chemin vers le model YOLO")
     parser.add_argument('-onnx', type=str, metavar="file_name",  help="Chemin vers le model ONNX")
@@ -113,11 +114,20 @@ class cv2_util:
         self.win_pos = None
 
     # ------------------------------
-    def center(self, win_name, win_size):
+    def center(self, win_name, SIZE=None):
 
-        cv2.moveWindow(win_name, 
-                       int((self.screen_x - win_size[0])/2), 
-                       int((self.screen_y - win_size[1])/2))
+        if SIZE :
+
+            cv2.moveWindow(win_name, 
+                       int((self.screen_x - SIZE[0])/2), 
+                       int((self.screen_y - SIZE[1])/2))
+
+        else :
+            self.win_pos = cv2.getWindowImageRect(win_name)
+        
+            cv2.moveWindow(win_name, 
+                       int((self.screen_x - self.win_pos[2])/2), 
+                       int((self.screen_y - self.win_pos[3])/2))
 
     # ------------------------------
     def switch_fullscreen(self, win_name):
@@ -133,6 +143,8 @@ class cv2_util:
             
             cv2.moveWindow(win_name,   self.win_pos[0], self.win_pos[1])
             cv2.resizeWindow(win_name, self.win_pos[2], self.win_pos[3])
+
+            return False
         
         else :
 
@@ -141,6 +153,14 @@ class cv2_util:
             self.fullscreen = True
 
             cv2.setWindowProperty(win_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
+            return True
+
+    # ------------------------------
+    def resize_fullscreen(self, frame):
+
+        return cv2.resize(frame, (self.screen_x, self.screen_y) )
+
 
     # ------------------------------
     def print_help(self, img):

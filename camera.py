@@ -14,16 +14,13 @@ from lib import my_argparse
 cmd = cmd_lib()
 cvu = cv2_util()
 
-#RESIZE = (4608/4, 2592/4)
-RESIZE = (1152, 648)
-#RESIZE = (1920, 1080)
-
 
 # -------------------------------------
 def main():
 
     # ---------------------------------
     FLAG_FLIP       = True
+    FLAG_FULLSCREEN = False
     FLAG_PRINT_HELP = False
 
 
@@ -63,6 +60,8 @@ def main():
     elif args.size == 640640:   SIZE = (640, 640)
     else:                       SIZE = (640, 480)
 
+    if   args.resize:           RESIZE = (1152, 648)
+    else :                      RESIZE = None
 
     if args.yolo:
         
@@ -110,11 +109,10 @@ def main():
         # Premiere capture pour positionner la fenettre
         im = picam2.capture_array()
 
-        im = cv2.resize(im, RESIZE )
-       
         cv2.namedWindow("Camera", cv2.WINDOW_AUTOSIZE)
-        cv2.imshow("Camera", im)
-        cvu.center("Camera", RESIZE)
+
+        if RESIZE : 
+            im = cv2.resize(im, RESIZE )
         
         loop_delay = 1
 
@@ -131,18 +129,22 @@ def main():
 
         if args.yolo : loop_delay = 1
 
+    # ------------------------------------------------------------------
     # ---------------------------------
     #           MAIN LOOP
     # ---------------------------------
-    a = 0
+    frame_nb = 0
     while True:
 
 
-        # ----------[ Get Camera  frame
+        # ------------------------------
+        # Selection de la source vidéo
+        # ------------------------------
+
+        # ----------[ Camera
         if args.cam == 0 or args.cam == 1:
 
             frame = picam2.capture_array()
-            frame = cv2.resize(frame, RESIZE )
 
             if FLAG_FLIP == True:  
                 frame = cv2.flip(frame,1)
@@ -160,17 +162,25 @@ def main():
             if args.size :
                 frame = cv2.resize(frame, SIZE)
 
+
+
+
+        # ------------------------------
+        # Selection du traitement
+        # ------------------------------
+
         # ----------[ YOLO inference
         if args.yolo:
 
             cv2.imshow("1", frame)
 
-            if a > 0 :
+            if frame_nb > 0 :
+
                 results = model(frame)
                 
                 annotated_frame = results[0].plot()
                 cv2.imshow("Camera", annotated_frame)
-
+                '''
                 keypoint = results[0].keypoints.xy
 
                 if len(keypoint[0]) == 2: 
@@ -183,7 +193,8 @@ def main():
                     cv2.line(frame, (x,0), (x, SIZE[1]), (0, 255, 0), 1)
 
                 cv2.imshow("3", frame)
-            
+
+                '''
             #elif a > 10 : a = 0
 
         # ----------[ ONNX  --> TODO
@@ -214,20 +225,29 @@ def main():
 
         # ----------[ Affichage de la CAM
         else :
-        
+
+            if frame_nb == 1 : cvu.center("Camera") 
+       
+            # Resize uniquement pour l'affichage , pas pour le traitement
+            if FLAG_FULLSCREEN :
+                frame = cvu.resize_fullscreen(frame)
+            elif RESIZE :
+                frame = cv2.resize(frame, RESIZE )
+
+            # Aide
             if FLAG_PRINT_HELP :
                 frame = cvu.print_help(frame)
 
             cv2.imshow("Camera", frame)
 
-        a += 1
+        frame_nb += 1
   
         # ---------------------------------------
         # Gestion du clavier
         key = cv2.waitKey(loop_delay) & 0xFF
         if key == 27:               exit()
-        elif key == ord('f'):       cvu.switch_fullscreen("Camera")
-        elif key == ord('c'):       cvu.center("Camera", RESIZE)
+        elif key == ord('f'):       FLAG_FULLSCREEN = cvu.switch_fullscreen("Camera")
+        elif key == ord('c'):       cvu.center("Camera")
         elif key == ord('g'):       FLAG_FLIP ^= 1
         elif key == ord('h'):       FLAG_PRINT_HELP ^= 1
 
