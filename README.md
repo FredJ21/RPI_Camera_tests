@@ -10,6 +10,13 @@
 
 La librairie python3-picamera2 est une bibliothèque Python développée par Raspberry Pi pour interagir avec les caméras compatibles (comme les modules Raspberry Pi Camera) en utilisant libcamera. Elle est conçue pour remplacer l’ancienne picamera et offre une interface plus moderne et flexible.
 
+Objectif de l'utilitaire "camera.py" :
+
+* Test simple de la camera du Raspberry
+* Test d'inférence YOLO
+* Test d'inférence ONNX
+* Test d'inférence HAILO
+
 
 ## Installation
 
