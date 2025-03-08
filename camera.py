@@ -22,6 +22,9 @@ def main():
     FLAG_FLIP       = True
     FLAG_FULLSCREEN = False
     FLAG_PRINT_HELP = False
+    FLAG_PRINT_INFO = True
+
+    img_size = (0,0)    # w,h
 
 
 
@@ -52,13 +55,15 @@ def main():
         exit ()
 
 
-    if   args.size == 320:      SIZE = (320, 240)
-    elif args.size == 800:      SIZE = (800, 600)
-    elif args.size == 1536:     SIZE = (1536, 864)
-    elif args.size == 2304:     SIZE = (2304, 1296)
-    elif args.size == 4608:     SIZE = (4608, 2592)
-    elif args.size == 640640:   SIZE = (640, 640)
-    else:                       SIZE = (640, 480)
+    if   args.size == 320:      CapSIZE = (320, 240)
+    elif args.size == 800:      CapSIZE = (800, 600)
+    elif args.size == 1536:     CapSIZE = (1536, 864)
+    elif args.size == 2304:     CapSIZE = (2304, 1296)
+    elif args.size == 4608:     CapSIZE = (4608, 2592)
+    elif args.size == 640640:   CapSIZE = (640, 640)
+    else:                       CapSIZE = (640, 480)
+
+    cvu.setCaptureSize(CapSIZE)
 
     if   args.resize:           RESIZE = (1152, 648)
     else :                      RESIZE = None
@@ -99,21 +104,17 @@ def main():
     if args.cam == 0 or args.cam == 1:
     
         picam2 = Picamera2(ID_CAM)
-        picam2.configure(picam2.create_preview_configuration(main={"format": 'RGB888', "size": SIZE}))
+        picam2.configure(picam2.create_preview_configuration(main={"format": 'RGB888', "size": CapSIZE}))
         picam2.set_controls({"AeMeteringMode": controls.AeMeteringModeEnum.Spot})
         #picam2.set_controls({"ExposureTime": 10000, "AnalogueGain": 1.0})
         #picam2.set_controls({"AnalogueGain": 1.0})
 
         picam2.start()
 
-        # Premiere capture pour positionner la fenettre
-        im = picam2.capture_array()
-
         cv2.namedWindow("Camera", cv2.WINDOW_AUTOSIZE)
 
-        if RESIZE : 
-            im = cv2.resize(im, RESIZE )
-        
+        img_size = CapSIZE
+
         loop_delay = 1
 
     # ---------------------------------
@@ -123,9 +124,20 @@ def main():
 
         cap = cv2.VideoCapture(VIDEO)
 
+        if not cap.isOpened():
+            print("Erreur : Impossible d'ouvrir la vidéo.")
+            exit(1)
+
         # Obtenir le framerate de la vidéo
         fps = cap.get(cv2.CAP_PROP_FPS)  # Récupérer le nombre d'images par seconde
         loop_delay = int(1000 / fps)  # Calcul du délai entre chaque image en millisecondes
+
+        # Obtenir la largeur et la hauteur des frames
+        img_size = ( int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)) )
+
+        cvu.setCaptureSize(img_size)
+        cvu.setCurrentSize(img_size)
+
 
         if args.yolo : loop_delay = 1
 
@@ -138,7 +150,7 @@ def main():
 
 
         # ------------------------------
-        # Selection de la source vidéo
+        # 1. Selection de la source vidéo
         # ------------------------------
 
         # ----------[ Camera
@@ -149,53 +161,43 @@ def main():
             if FLAG_FLIP == True:  
                 frame = cv2.flip(frame,1)
     
-            #cv2.setWindowProperty("Camera", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-            #cv2.setWindowProperty("Camera", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_NORMAL)
-
         # ----------[ Video file
         elif args.video :
 
             ret, frame = cap.read()
-
             if not ret:  break
     
-            if args.size :
-                frame = cv2.resize(frame, SIZE)
-
-
-
 
         # ------------------------------
-        # Selection du traitement
+        # 2. Selection du traitement
         # ------------------------------
 
         # ----------[ YOLO inference
         if args.yolo:
 
-            cv2.imshow("1", frame)
 
             if frame_nb > 0 :
 
                 results = model(frame)
                 
-                annotated_frame = results[0].plot()
-                cv2.imshow("Camera", annotated_frame)
-                '''
-                keypoint = results[0].keypoints.xy
+                frame = results[0].plot()
+        
+                # Si un point est détecté
+                if results[0].keypoints and hasattr(results[0].keypoints, "xy"):
 
-                if len(keypoint[0]) == 2: 
-                    p1, p2 = keypoint[0]
+                    keypoint = results[0].keypoints.xy
+                    
+                    if len(keypoint[0]) == 2: 
 
-                    x = int(p1[0])
-                    y = int(p1[1])
+                        p1, p2 = keypoint[0]
 
-                    cv2.line(frame, (0,y), (SIZE[0], y), (0, 255, 0), 1)
-                    cv2.line(frame, (x,0), (x, SIZE[1]), (0, 255, 0), 1)
+                        x = int(p1[0])
+                        y = int(p1[1])
 
-                cv2.imshow("3", frame)
+                        cv2.line(frame, (0,y), (img_size[0], y), (0, 255, 0), 1)
+                        cv2.line(frame, (x,0), (x, img_size[1]), (0, 255, 0), 1)
 
-                '''
-            #elif a > 10 : a = 0
+
 
         # ----------[ ONNX  --> TODO
         elif args.onnx:
@@ -223,8 +225,11 @@ def main():
             cv2.imshow("Camera", resized_image)
 
 
-        # ----------[ Affichage de la CAM
-        else :
+
+        # ------------------------------
+        # 3. Affichage
+        # ------------------------------
+        if True :
 
             if frame_nb == 1 : cvu.center("Camera") 
        
@@ -232,24 +237,30 @@ def main():
             if FLAG_FULLSCREEN :
                 frame = cvu.resize_fullscreen(frame)
             elif RESIZE :
-                frame = cv2.resize(frame, RESIZE )
+                frame = cvu.resize(frame, RESIZE )
 
             # Aide
-            if FLAG_PRINT_HELP :
-                frame = cvu.print_help(frame)
+            if FLAG_PRINT_HELP :        frame = cvu.print_help(frame)
+            elif FLAG_PRINT_INFO :      frame = cvu.print_info(frame)
 
             cv2.imshow("Camera", frame)
 
+
+            # FPS
+            cvu.update_fps()
+
         frame_nb += 1
   
-        # ---------------------------------------
-        # Gestion du clavier
+        # ------------------------------
+        # 4. Gestion du clavier
+        # ------------------------------
         key = cv2.waitKey(loop_delay) & 0xFF
         if key == 27:               exit()
         elif key == ord('f'):       FLAG_FULLSCREEN = cvu.switch_fullscreen("Camera")
         elif key == ord('c'):       cvu.center("Camera")
         elif key == ord('g'):       FLAG_FLIP ^= 1
         elif key == ord('h'):       FLAG_PRINT_HELP ^= 1
+        elif key == ord('i'):       FLAG_PRINT_INFO ^= 1
 
 
     if args.video : cap.release()
