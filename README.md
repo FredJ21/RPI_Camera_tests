@@ -69,3 +69,9 @@ https://github.com/raspberrypi/picamera2
 ### Picamera2 Python library - PDF manual
 
 https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf
+
+### Module AI
+
+https://www.raspberrypi.com/documentation/computers/ai.html
+
+
