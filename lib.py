@@ -39,6 +39,7 @@ def my_argparse():
     parser.add_argument('-show_cam',    action='store_true', help="Liste les cameras")
     parser.add_argument('-show_hailo',  action='store_true', help="Verifie la presence le module AI HAILO")
     parser.add_argument('-show_cv',     action='store_true', help="OpenCV version")
+    parser.add_argument('-show_hef',     action='store_true', help="Liste des modèles HAILO")
     parser.add_argument('-video', type=str, metavar="file_name",  help="Chemin vers un fichier video")
     parser.add_argument('-cam',  type=int,   choices=[0, 1],      help="ID de la camera utiliser (defaut: 0)")
     parser.add_argument('-size', type=int,   choices=[320, 640480, 640640, 800, 1536, 2304, 4608],
@@ -89,6 +90,11 @@ class cmd_lib:
         cmd = "hailortcli fw-control identify"
         self.launch_cmd(cmd)
 
+    def show_hef(self):
+        
+        cmd = "ls -al /usr/share/hailo-models/*hef"
+        self.launch_cmd(cmd)
+
 
 # -------------------------------------
 class cv2_util:
@@ -114,13 +120,24 @@ class cv2_util:
             "i --> info"
             ]
 
-        self.screen_x = get_monitors()[0].width
-        self.screen_y = get_monitors()[0].height
+        try: 
+            self.screen_x = get_monitors()[0].width
+            self.screen_y = get_monitors()[0].height
+        except:
+            self.screen_x = None
+            self.screen_y = None
+
 
         self.fullscreen = False
         self.WinImgRect = None              # x, y, w, h
         self.WinCaptureSize = None          # w, h
         self.WinCurrentSize = None          # w, h
+
+    # ---------------------
+    def isScreenAvailable(self):
+
+        if self.screen_x and self.screen_y :    return True
+        else:                                   return False
 
     # ---------------------
     def setCaptureSize(self, size):
