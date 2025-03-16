@@ -25,6 +25,7 @@ def main():
     FLAG_PRINT_INFO = True
 
     img_size = (0,0)    # w,h
+    hailo_model_size = (0,0)
 
 
 
@@ -120,9 +121,9 @@ def main():
 
         hailo = Hailo(args.hef)
         model_h, model_w, _ = hailo.get_input_shape()
-        model_size = (model_w, model_h)
+        hailo_model_size = (model_w, model_h)
 
-        print("Hailo Model Size =", model_size)
+        print("Hailo Model Size =", hailo_model_size)
 
 
     # ---------------------------------
@@ -166,7 +167,7 @@ def main():
         cvu.setCurrentSize(img_size)
 
 
-        if args.yolo : loop_delay = 1
+        if args.yolo or args.hef : loop_delay = 1
 
 
 
@@ -257,14 +258,16 @@ def main():
         # ----------[ HAILO MODEL
         elif args.hef:
 
-            raw_detections = hailo.run(frame)
+            frame_resized = cv2.resize(frame, hailo_model_size)
+
+            raw_detections = hailo.run(frame_resized)
 
             # Tidy up the predictions. num_of_classes is always 1 (?).
-            last_predictions = postproc_yolov8_pose(1, raw_detections, CapSIZE)
+            last_predictions = postproc_yolov8_pose(1, raw_detections, hailo_model_size)
                         
             # Dessiner les résultats de l'inférence sur le frame
             if last_predictions:
-                visualize_pose_estimation_result(last_predictions, frame, CapSIZE)
+                visualize_pose_estimation_result(last_predictions, frame, hailo_model_size)
 
 
 
@@ -292,6 +295,7 @@ def main():
             cvu.update_fps()
 
         frame_nb += 1
+
   
         # ------------------------------
         # 4. Gestion du clavier
