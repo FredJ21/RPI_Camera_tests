@@ -1,5 +1,7 @@
 onnxruntime_*.json
 test.py
+resources/
+video/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
