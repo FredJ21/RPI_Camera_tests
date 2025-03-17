@@ -2,6 +2,15 @@
 
 
 
-sudo apt install -y python3-picamera2
+Modification des scripts HAILO pour la cam csi 1  ( vs 0 )
 
-sudo apt install -y python3-pyqt5 python3-opengl
+
+Fichier : 
+   hailo-rpi5-examples/venv_hailo_rpi5_examples/lib/python3.11/site-packages/hailo_apps_infra/gstreamer_app.py
+
+ligne 273: 
+  <-- with Picamera2() as picam2:
+  --> with Picamera2(1) as picam2:
+
+
+
