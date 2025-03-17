@@ -2,6 +2,7 @@ onnxruntime_*.json
 test.py
 resources/
 video/
+hailo-rpi5-examples/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
