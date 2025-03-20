@@ -31,8 +31,12 @@ def my_argparse():
         python camera.py -cam 0
         python camera.py -cam 0 -yolo exemples/form_detect.pt
         python camera.py -cam 1 -onnx exemples/best.onnx
+
         python camera.py -video exemples/video_form.mp4 -yolo exemples/form_detect.pt
-        python camera.py -video exemples/video_captcha_60s.mp4 -yolo exemples/captcha_detect.pt
+        python camera.py -video exemples/video_captcha_60s.mp4 -yolo exemples/20250221_captcha_detect.pt
+
+        python camera.py -cam 0 -yolo exemples/20250221_captcha_detect.pt
+
 
         python camera.py -video video/NMC2023_Fred_1280x720.mp4 -hef /usr/share/hailo-models/yolov8s_pose_h8.hef
     ''',

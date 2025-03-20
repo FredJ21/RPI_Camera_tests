@@ -27,6 +27,12 @@ class user_app_callback_class(app_callback_class):
 
 # This is the callback function that will be called when data is available from the pipeline
 def app_callback(pad, info, user_data):
+
+    print("app_callback")
+
+    return Gst.PadProbeReturn.OK
+
+
     # Get the GstBuffer from the probe info
     buffer = info.get_buffer()
     # Check if the buffer is valid

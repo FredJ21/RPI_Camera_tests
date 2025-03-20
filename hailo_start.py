@@ -12,7 +12,7 @@ SRC_FILE    = "hailo_start.conf"
 HAILO_ENV   = "hailo-rpi5-examples/setup_env.sh"
 SCRIPTS_REP = "hailo-rpi5-examples/basic_pipelines/"
 
-SWITCH_ADD  = "-f --arch hailo8"
+SWITCH_ADD  = "--arch hailo8"
 
 # ----------------------------------------
 def main():
@@ -40,7 +40,8 @@ def main():
 
     try: 
         my_script = enquiries.choose('', my_list)
-    except:
+    except Exception as e:
+        print("Error :", e)
         exit()
 
 
