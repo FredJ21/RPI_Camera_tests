@@ -21,6 +21,10 @@ class user_app_callback_class(app_callback_class):
     def __init__(self):
         super().__init__()
 
+        self.use_frame = False
+        self.fred_data = 21
+        self.show_target = False
+
 # -----------------------------------------------------------------------------------------------
 # User-defined callback function
 # -----------------------------------------------------------------------------------------------
@@ -28,9 +32,6 @@ class user_app_callback_class(app_callback_class):
 # This is the callback function that will be called when data is available from the pipeline
 def app_callback(pad, info, user_data):
 
-    print("app_callback")
-
-    return Gst.PadProbeReturn.OK
 
 
     # Get the GstBuffer from the probe info
@@ -38,6 +39,10 @@ def app_callback(pad, info, user_data):
     # Check if the buffer is valid
     if buffer is None:
         return Gst.PadProbeReturn.OK
+
+    print("=> app_callback :", "GO !")
+    print("=> use_frame :", user_data.use_frame)
+    print("=> fred_data :", user_data.fred_data)
 
     # Using the user_data to count the number of frames
     user_data.increment()
@@ -49,13 +54,24 @@ def app_callback(pad, info, user_data):
     # If the user_data.use_frame is set to True, we can get the video frame from the buffer
     frame = None
     if user_data.use_frame and format is not None and width is not None and height is not None:
+
+        print("=> get frame")
         # Get video frame
         frame = get_numpy_from_buffer(buffer, format, width, height)
+
+        # TEST 
+        if user_data.show_target :
+            x = int(width/2)
+            y = int(height/2)
+            cv2.line(frame, (0,y), (width, y), (0, 255, 0), 1)      # ligne horizontale
+            cv2.line(frame, (x,0), (x, height), (0, 255, 0), 1)     # ligne verticale
+
 
     # Get the detections from the buffer
     roi = hailo.get_roi_from_buffer(buffer)
     detections = roi.get_objects_typed(hailo.HAILO_DETECTION)
 
+    print("=> get keypoints")
     # Get the keypoints
     keypoints = get_keypoints()
 
@@ -85,12 +101,13 @@ def app_callback(pad, info, user_data):
                     if user_data.use_frame:
                         cv2.circle(frame, (x, y), 5, (0, 255, 0), -1)
 
+
     if user_data.use_frame:
         # Convert the frame to BGR
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         user_data.set_frame(frame)
 
-    print(string_to_print)
+    print("END Callback => ", string_to_print)
     return Gst.PadProbeReturn.OK
 
 # This function can be used to get the COCO keypoints coorespondence map
