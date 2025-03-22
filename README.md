@@ -4,7 +4,7 @@
 
 
 
-<img src="img/en_construction.webp" width="100%">
+<img src="img/en_construction.webp" width="80%">
 
 ## Intro
 
