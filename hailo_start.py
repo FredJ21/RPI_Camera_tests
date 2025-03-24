@@ -10,7 +10,8 @@ import subprocess
 SRC_FILE    = "hailo_start.conf"
 
 HAILO_ENV   = "hailo-rpi5-examples/setup_env.sh"
-SCRIPTS_REP = "hailo-rpi5-examples/basic_pipelines/"
+#SCRIPTS_REP = "hailo-rpi5-examples/basic_pipelines/"
+SCRIPTS_REP = "hailo-rpi5-fred/"
 
 SWITCH_ADD  = "--arch hailo8"
 
@@ -56,6 +57,7 @@ def main():
     print(cmd)
     print("------------------------------------")
     print("\n\n")
+    print("<< Press Enter >>")
 
     # Ajoute l'environnement HAILO
     cmd  = f"source {HAILO_ENV};" + cmd

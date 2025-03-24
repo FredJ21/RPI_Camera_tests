@@ -7,6 +7,7 @@ Modification des scripts HAILO pour la cam csi 1  ( vs 0 )
 
 Fichier : 
    hailo-rpi5-examples/venv_hailo_rpi5_examples/lib/python3.11/site-packages/hailo_apps_infra/gstreamer_app.py
+   hailo-rpi5-fred/hailo_apps_infra/gstreamer_app.py
 
 ligne 273: 
   <-- with Picamera2() as picam2:
